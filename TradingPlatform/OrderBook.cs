@@ -57,8 +57,6 @@ public unsafe class OrderBook
                 return;
             }
         }
-
-        throw new InvalidOperationException("Order book is full.");
     }
 
     public unsafe void RemoveOrder(int orderId, bool isBuyOrder)
@@ -75,6 +73,27 @@ public unsafe class OrderBook
         }
 
         throw new InvalidOperationException("Order not found.");
+    }
+
+    public unsafe void ModifyOrder(int orderId, double newPrice, int newQuantity)
+    {
+        for (int i = 0; i < size; i++)
+        {
+            if (buyOrders[i].Id == orderId)
+            {
+                buyOrders[i].Price = newPrice;
+                buyOrders[i].Quantity = newQuantity;
+                UpdateAndNotify();
+                return;
+            }
+            else if (sellOrders[i].Id == orderId)
+            {
+                sellOrders[i].Price = newPrice;
+                sellOrders[i].Quantity = newQuantity;
+                UpdateAndNotify();
+                return;
+            }
+        }
     }
 
     public unsafe void UpdateAndNotify()
