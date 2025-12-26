@@ -100,9 +100,35 @@ static unsafe void SimulateIncomingOrders(OrderBook orderBook)
     }
 }
 
-OrderBook orderBook = new ();
-SimulateIncomingOrders(orderBook);
-orderBook.PrintOrders();
-orderBook.ModifyOrder(1, 99.0, 120);
-orderBook.ModifyOrder(6, 104.9, 120);
-orderBook.PrintOrders();
+void PracticeActivity()
+{
+    int orderBookSize = 10;
+    OrderBook orderBook = new (orderBookSize);
+    SimulateIncomingOrders(orderBook);
+    orderBook.PrintOrders();
+    orderBook.ModifyOrder(1, 99.0, 120);
+    orderBook.ModifyOrder(6, 104.9, 120);
+    orderBook.PrintOrders();
+}
+
+void RunLessonFour()
+{
+    int size = 10;
+    OrderBook orderBook = new (size);
+    SimulateIncomingOrders(orderBook);
+
+    User buyer = new User(1, "John Doe");
+    buyer.Balance = 10_000.0;
+
+    int lowestSellIndex;
+    double lowestSellPrice = orderBook.GetLowestSellPrice(out lowestSellIndex);
+    Console.WriteLine($"Current lowest sell price: {lowestSellPrice}");
+
+    orderBook.PrintOrders();
+
+    bool purchaseSuccess = orderBook.BuyAtLowestSellPrice(50, 150.0, buyer);
+
+    orderBook.PrintOrders();
+}
+
+RunLessonFour();

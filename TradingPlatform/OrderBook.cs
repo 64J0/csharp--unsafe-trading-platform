@@ -7,7 +7,7 @@ public unsafe class OrderBook
 {
     // The order book will hold a fixed number of orders for simplicity and performance.
     // In a real-world scenario, dynamic resizing and more complex data structures would be needed.
-    const int size = 10;
+    int size = 10;
     Order* buyOrders;
     Order* sellOrders;
     public delegate void PriceNotificationEventHandler(object sender, PriceNotificationEventArgs e);
@@ -15,8 +15,10 @@ public unsafe class OrderBook
     private double highestBuyPrice;
     private double lowestSellPrice;
 
-    public OrderBook()
+    public OrderBook(int size)
     {
+        this.size = size;
+
         // Allocate unmanaged memory for buy and sell orders.
         buyOrders = (Order*)NativeMemory.Alloc((nuint)(sizeof(Order) * size));
         sellOrders = (Order*)NativeMemory.Alloc((nuint)(sizeof(Order) * size));
@@ -121,6 +123,57 @@ public unsafe class OrderBook
                 }
             }
         }
+    }
+
+    public unsafe double GetLowestSellPrice(out int lowestSellIndex)
+    {
+        lowestSellIndex = -1;
+        double lowestPrice = double.MaxValue;
+
+        for (int i = 0; i < size; i++)
+        {
+            if (sellOrders[i].Id != 0 && sellOrders[i].Price < lowestPrice)
+            {
+                lowestPrice = sellOrders[i].Price;
+                lowestSellIndex = i;
+            }
+        }
+
+        return lowestSellPrice == double.MaxValue ? -1 : lowestSellPrice;
+    }
+
+    public unsafe bool BuyAtLowestSellPrice(int buyQuantity, double maxPrice, User buyer)
+    {
+        int lowestSellIndex;
+        double lowestPrice = GetLowestSellPrice(out lowestSellIndex);
+
+        if (lowestSellIndex == -1 || lowestPrice > maxPrice)
+        {
+            Console.WriteLine("No suitable sell orders available.");
+            return false;
+        }
+
+        double totalCost = lowestPrice * buyQuantity;
+        if (buyer.Balance < totalCost)
+        {
+            Console.WriteLine("Insufficient funds to complete the purchase.");
+            return false;
+        }
+
+        Order* matchedSellOrder = &sellOrders[lowestSellIndex];
+
+        int matchedQuantity = Math.Min(buyQuantity, matchedSellOrder->Quantity);
+        matchedSellOrder->Quantity -= matchedQuantity;
+        buyer.Balance -= totalCost;
+
+        Console.WriteLine($"Order fulfilled: Buyer matched with Sell Order {matchedSellOrder->Id} at Price {matchedSellOrder->Price} for Quantity {matchedQuantity}.");
+
+        if (matchedSellOrder->Quantity == 0)
+        {
+            RemoveOrder(matchedSellOrder->Id, false);
+        }
+
+        return true;
     }
 
     public unsafe void PrintOrders()
