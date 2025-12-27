@@ -176,6 +176,52 @@ public unsafe class OrderBook
         return true;
     }
 
+    public unsafe void BulkCancelOrders(OrderCancellationRequest[] requests)
+    {
+        Span<int> buffer = stackalloc int[requests.Length];
+
+        for (int i = 0; i < requests.Length; i++)
+        {
+            buffer[i] = requests[i].OrderId;
+        }
+
+        RemoveOrders(buffer);
+    }
+
+    private unsafe void RemoveOrders(Span<int> orderIds)
+    {
+        fixed(int* orderIdsPtr = orderIds)
+        {
+            for (int i = 0; i < orderIds.Length; i++)
+            {
+                int orderId = orderIdsPtr[i];
+                int orderIndex = -1;
+                Order* orders = null;
+
+                for (int j = 0; j < size; j++)
+                {
+                    if (buyOrders[j].Id == orderId)
+                    {
+                        orders = buyOrders;
+                        orderIndex = j;
+                        break;
+                    }
+                    else if (sellOrders[j].Id == orderId)
+                    {
+                        orders = sellOrders;
+                        orderIndex = j;
+                        break;
+                    }
+                }
+
+                if (orderIndex != -1)
+                {
+                    orders[orderIndex] = new Order {Id= 0}; // Mark as empty
+                }
+            }
+        }
+    }
+
     public unsafe void PrintOrders()
     {
         Console.WriteLine("Buy Orders:");

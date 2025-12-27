@@ -34,6 +34,10 @@
 // - Implement a trade reporting feature that aggregates trade data using fixed-size buffers and generates comprehensive reports on trading activity.
 //   - Use fixed-size buffers to temporarily hold the trade data.
 //   - Write the trade data to a file for further analysis or record keeping.
+//
+// Cumulative activity:
+//
+// - Implement bulk order cancellation.
 
 void SimulateUserSubscriptionsAndOrders(OrderBook orderBook)
 {
@@ -70,9 +74,8 @@ void SimulateUserSubscriptionsAndOrders(OrderBook orderBook)
     orderBook.PrintOrders();
 }
 
-void SimulateIncomingOrders(OrderBook orderBook)
+void SimulateIncomingOrders(OrderBook orderBook, int size)
 {
-    int size = 10;
     Order[] orders = new Order[size];
 
     unsafe {
@@ -110,7 +113,7 @@ void PracticeActivity()
 {
     int orderBookSize = 10;
     OrderBook orderBook = new (orderBookSize);
-    SimulateIncomingOrders(orderBook);
+    SimulateIncomingOrders(orderBook, orderBookSize);
     orderBook.PrintOrders();
     orderBook.ModifyOrder(1, 99.0, 120);
     orderBook.ModifyOrder(6, 104.9, 120);
@@ -121,7 +124,7 @@ void RunLessonFour()
 {
     int size = 10;
     OrderBook orderBook = new (size);
-    SimulateIncomingOrders(orderBook);
+    SimulateIncomingOrders(orderBook, 10);
 
     User buyer = new User(1, "John Doe");
     buyer.Balance = 10_000.0;
@@ -161,4 +164,26 @@ void RunLessonFive()
     tradeLogger.FinalizeLogging();
 }
 
-RunLessonFive();
+// RunLessonFive();
+
+void RunCumulativeActivity()
+{
+    int size = 10;
+    OrderBook orderBook = new (size);
+    SimulateIncomingOrders(orderBook, size);
+
+    orderBook.PrintOrders();
+
+    OrderCancellationRequest[] cancellationRequests = new OrderCancellationRequest[]
+    {
+        new OrderCancellationRequest { OrderId = 1 },
+        new OrderCancellationRequest { OrderId = 5 },
+        new OrderCancellationRequest { OrderId = 7 }
+    };
+
+    orderBook.BulkCancelOrders(cancellationRequests);
+
+    orderBook.PrintOrders();
+}
+
+RunCumulativeActivity();
