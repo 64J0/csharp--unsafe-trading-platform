@@ -28,8 +28,14 @@
 // - Dive deeper into using pointer conversions and arithmetic for order fulfillment.
 // - Implement methods to check the current lowest sell price.
 // - Allow users to buy at that price efficiently.
+//
+// Lesson 5:
+//
+// - Implement a trade reporting feature that aggregates trade data using fixed-size buffers and generates comprehensive reports on trading activity.
+//   - Use fixed-size buffers to temporarily hold the trade data.
+//   - Write the trade data to a file for further analysis or record keeping.
 
-static void SimulateUserSubscriptionsAndOrders(OrderBook orderBook)
+void SimulateUserSubscriptionsAndOrders(OrderBook orderBook)
 {
     User user1 = new User(1, "Alice");
     user1.SubscribeToBuyPrice(99.0);   // Notify if price rises above 99 for buy orders
@@ -64,7 +70,7 @@ static void SimulateUserSubscriptionsAndOrders(OrderBook orderBook)
     orderBook.PrintOrders();
 }
 
-static unsafe void SimulateIncomingOrders(OrderBook orderBook)
+void SimulateIncomingOrders(OrderBook orderBook)
 {
     int size = 10;
     Order[] orders = new Order[size];
@@ -131,4 +137,28 @@ void RunLessonFour()
     orderBook.PrintOrders();
 }
 
-RunLessonFour();
+// RunLessonFour();
+
+void RunLessonFive()
+{
+    TradeLogger tradeLogger = new();
+
+    // Simulate trades
+    Random random = new();
+    for (int i = 0; i < 10; i++)
+    {
+        Trade trade = new Trade
+        {
+            TradeId = i + 1,
+            OrderId = (i % 50) + 1,
+            Price = 100.0 + (i % 20),
+            Quantity = 10 + (i % 5),
+            Timestamp = DateTime.Now.AddDays(-random.Next(0, 30))
+        };
+        tradeLogger.LogTrade(trade);
+    }
+
+    tradeLogger.FinalizeLogging();
+}
+
+RunLessonFive();
