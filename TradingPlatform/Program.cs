@@ -39,151 +39,156 @@
 //
 // - Implement bulk order cancellation.
 
-void SimulateUserSubscriptionsAndOrders(OrderBook orderBook)
+public class ManualValidation
 {
-    User user1 = new User(1, "Alice");
-    user1.SubscribeToBuyPrice(99.0);   // Notify if price rises above 99 for buy orders
-    user1.SubscribeToBuyPrice(100.0);  // minimum user is willing to sell for
-    user1.SubscribeToSellPrice(105.0); // Notify if price falls below 105 for sell orders
-    user1.SubscribeToSellPrice(101.0); // maximum user is willing to pay
-
-    orderBook.PriceNotification += user1.OnPriceNotification;
-
-    Order newBuyOrder = new Order
+    static void SimulateUserSubscriptionsAndOrders(OrderBook orderBook)
     {
-        Id = 1,
-        IsBuyOrder = true,
-        Quantity = 100,
-        Price = 101.5
-    };
-    orderBook.AddOrder(newBuyOrder);
+        User user1 = new User(1, "Alice");
+        user1.SubscribeToBuyPrice(99.0);   // Notify if price rises above 99 for buy orders
+        user1.SubscribeToBuyPrice(100.0);  // minimum user is willing to sell for
+        user1.SubscribeToSellPrice(105.0); // Notify if price falls below 105 for sell orders
+        user1.SubscribeToSellPrice(101.0); // maximum user is willing to pay
 
-    Order newSellOrder = new Order
-    {
-        Id = 2,
-        IsBuyOrder = false,
-        Quantity = 50,
-        Price = 102.5
-    };
-    orderBook.AddOrder(newSellOrder);
+        orderBook.PriceNotification += user1.OnPriceNotification;
 
-    orderBook.PrintOrders();
-
-    orderBook.RemoveOrder(1, true);
-
-    orderBook.PrintOrders();
-}
-
-void SimulateIncomingOrders(OrderBook orderBook, int size)
-{
-    Order[] orders = new Order[size];
-
-    unsafe {
-        fixed (Order* ordersPtr = orders)
+        Order newBuyOrder = new Order
         {
-            for (int i = 0; i < size; i++)
+            Id = 1,
+            IsBuyOrder = true,
+            Quantity = 100,
+            Price = 101.5
+        };
+        orderBook.AddOrder(newBuyOrder);
+
+        Order newSellOrder = new Order
+        {
+            Id = 2,
+            IsBuyOrder = false,
+            Quantity = 50,
+            Price = 102.5
+        };
+        orderBook.AddOrder(newSellOrder);
+
+        orderBook.PrintOrders();
+
+        orderBook.RemoveOrder(1, true);
+
+        orderBook.PrintOrders();
+    }
+
+    static void SimulateIncomingOrders(OrderBook orderBook, int size)
+    {
+        Order[] orders = new Order[size];
+
+        unsafe {
+            fixed (Order* ordersPtr = orders)
             {
-                if (i < size / 2)
+                for (int i = 0; i < size; i++)
                 {
-                    ordersPtr[i] = new Order
+                    if (i < size / 2)
                     {
-                        Id = i + 1,
-                        IsBuyOrder = true,
-                        Quantity = 10 + i,
-                        Price = 100 + i
-                    };
-                }
-                else
-                {
-                    ordersPtr[i] = new Order
+                        ordersPtr[i] = new Order
+                        {
+                            Id = i + 1,
+                            IsBuyOrder = true,
+                            Quantity = 10 + i,
+                            Price = 100 + i
+                        };
+                    }
+                    else
                     {
-                        Id = i + 1,
-                        IsBuyOrder = false,
-                        Quantity = 20 + i,
-                        Price = 200 + i
-                    };
+                        ordersPtr[i] = new Order
+                        {
+                            Id = i + 1,
+                            IsBuyOrder = false,
+                            Quantity = 20 + i,
+                            Price = 200 + i
+                        };
+                    }
+                    orderBook.AddOrder(ordersPtr[i]);
                 }
-                orderBook.AddOrder(ordersPtr[i]);
             }
         }
     }
-}
 
-void PracticeActivity()
-{
-    int orderBookSize = 10;
-    OrderBook orderBook = new (orderBookSize);
-    SimulateIncomingOrders(orderBook, orderBookSize);
-    orderBook.PrintOrders();
-    orderBook.ModifyOrder(1, 99.0, 120);
-    orderBook.ModifyOrder(6, 104.9, 120);
-    orderBook.PrintOrders();
-}
-
-void RunLessonFour()
-{
-    int size = 10;
-    OrderBook orderBook = new (size);
-    SimulateIncomingOrders(orderBook, 10);
-
-    User buyer = new User(1, "John Doe");
-    buyer.Balance = 10_000.0;
-
-    int lowestSellIndex;
-    double lowestSellPrice = orderBook.GetLowestSellPrice(out lowestSellIndex);
-    Console.WriteLine($"Current lowest sell price: {lowestSellPrice}");
-
-    orderBook.PrintOrders();
-
-    bool purchaseSuccess = orderBook.BuyAtLowestSellPrice(50, 150.0, buyer);
-
-    orderBook.PrintOrders();
-}
-
-// RunLessonFour();
-
-void RunLessonFive()
-{
-    TradeLogger tradeLogger = new();
-
-    // Simulate trades
-    Random random = new();
-    for (int i = 0; i < 10; i++)
+    static void PracticeActivity()
     {
-        Trade trade = new Trade
-        {
-            TradeId = i + 1,
-            OrderId = (i % 50) + 1,
-            Price = 100.0 + (i % 20),
-            Quantity = 10 + (i % 5),
-            Timestamp = DateTime.Now.AddDays(-random.Next(0, 30))
-        };
-        tradeLogger.LogTrade(trade);
+        int orderBookSize = 10;
+        OrderBook orderBook = new (orderBookSize);
+        SimulateIncomingOrders(orderBook, orderBookSize);
+        orderBook.PrintOrders();
+        orderBook.ModifyOrder(1, 99.0, 120);
+        orderBook.ModifyOrder(6, 104.9, 120);
+        orderBook.PrintOrders();
     }
 
-    tradeLogger.FinalizeLogging();
-}
-
-// RunLessonFive();
-
-void RunCumulativeActivity()
-{
-    int size = 10;
-    OrderBook orderBook = new (size);
-    SimulateIncomingOrders(orderBook, size);
-
-    orderBook.PrintOrders();
-
-    OrderCancellationRequest[] cancellationRequests = new OrderCancellationRequest[]
+    static void RunLessonFour()
     {
-        new OrderCancellationRequest { OrderId = 1 },
-        new OrderCancellationRequest { OrderId = 5 },
-        new OrderCancellationRequest { OrderId = 7 }
-    };
+        int size = 10;
+        OrderBook orderBook = new (size);
+        SimulateIncomingOrders(orderBook, 10);
 
-    orderBook.BulkCancelOrders(cancellationRequests);
+        User buyer = new User(1, "John Doe");
+        buyer.Balance = 10_000.0;
 
-    orderBook.PrintOrders();
+        int lowestSellIndex;
+        double lowestSellPrice = orderBook.GetLowestSellPrice(out lowestSellIndex);
+        Console.WriteLine($"Current lowest sell price: {lowestSellPrice}");
+
+        orderBook.PrintOrders();
+
+        bool purchaseSuccess = orderBook.BuyAtLowestSellPrice(50, 150.0, buyer);
+
+        orderBook.PrintOrders();
+    }
+
+    static void RunLessonFive()
+    {
+        TradeLogger tradeLogger = new();
+
+        // Simulate trades
+        Random random = new();
+        for (int i = 0; i < 10; i++)
+        {
+            Trade trade = new Trade
+            {
+                TradeId = i + 1,
+                OrderId = (i % 50) + 1,
+                Price = 100.0 + (i % 20),
+                Quantity = 10 + (i % 5),
+                Timestamp = DateTime.Now.AddDays(-random.Next(0, 30))
+            };
+            tradeLogger.LogTrade(trade);
+        }
+
+        tradeLogger.FinalizeLogging();
+    }
+
+    public static void RunCumulativeActivity()
+    {
+        int size = 10;
+        OrderBook orderBook = new (size);
+        SimulateIncomingOrders(orderBook, size);
+
+        orderBook.PrintOrders();
+
+        OrderCancellationRequest[] cancellationRequests = new OrderCancellationRequest[]
+        {
+            new OrderCancellationRequest { OrderId = 1 },
+            new OrderCancellationRequest { OrderId = 5 },
+            new OrderCancellationRequest { OrderId = 7 }
+        };
+
+        orderBook.BulkCancelOrders(cancellationRequests);
+
+        orderBook.PrintOrders();
+    }
 }
 
-RunCumulativeActivity();
+public class Program
+{
+    public static void Main(string[] args)
+    {
+        ManualValidation.RunCumulativeActivity();
+    }
+}

@@ -11,7 +11,7 @@ public unsafe class OrderBook
     Order* buyOrders;
     Order* sellOrders;
     public delegate void PriceNotificationEventHandler(object sender, PriceNotificationEventArgs e);
-    public event PriceNotificationEventHandler PriceNotification;
+    public event PriceNotificationEventHandler? PriceNotification;
     private double highestBuyPrice;
     private double lowestSellPrice;
 
@@ -110,13 +110,13 @@ public unsafe class OrderBook
 
             for (int i = 0; i < size; i++)
             {
-                if (buyOrders[i].Price > *fixedHighestBuyPrice)
+                if (buyOrders[i].Id != 0 && buyOrders[i].Price > *fixedHighestBuyPrice)
                 {
                     *fixedHighestBuyPrice = buyOrders[i].Price;
                     OnPriceNotification(new PriceNotificationEventArgs(*fixedHighestBuyPrice, true));
                 }
 
-                if (sellOrders[i].Price < *fixedLowestSellPrice)
+                if (sellOrders[i].Id != 0 && sellOrders[i].Price < *fixedLowestSellPrice)
                 {
                     *fixedLowestSellPrice = sellOrders[i].Price;
                     OnPriceNotification(new PriceNotificationEventArgs(*fixedLowestSellPrice, false));
@@ -139,7 +139,8 @@ public unsafe class OrderBook
             }
         }
 
-        return lowestSellPrice == double.MaxValue ? -1 : lowestSellPrice;
+        lowestSellPrice = lowestPrice;
+        return lowestPrice == double.MaxValue ? -1 : lowestPrice;
     }
 
     public unsafe bool BuyAtLowestSellPrice(int buyQuantity, double maxPrice, User buyer)
@@ -241,5 +242,20 @@ public unsafe class OrderBook
                 Console.WriteLine($"Order {sellOrders[i].Id}: Price={sellOrders[i].Price}, Quantity={sellOrders[i].Quantity}");
             }
         }
+    }
+
+    public unsafe Order GetOrderById(int orderId, bool isBuyOrder)
+    {
+        Order* orders = isBuyOrder ? buyOrders : sellOrders;
+
+        for (int i = 0; i < size; i++)
+        {
+            if (orders[i].Id == orderId)
+            {
+                return orders[i];
+            }
+        }
+
+        throw new InvalidOperationException("Order not found.");
     }
 }
