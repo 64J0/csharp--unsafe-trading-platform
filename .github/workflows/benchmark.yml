@@ -1,0 +1,46 @@
+name: Benchmark
+
+on:
+  workflow_dispatch:
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+      
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '10.0.x'
+      
+      - name: Restore dependencies
+        run: dotnet restore
+      
+      - name: Build solution
+        run: dotnet build --configuration Release --no-restore
+      
+      - name: Run benchmarks
+        run: |
+          cd TradingPlatform.Benchmarks
+          dotnet run -c Release --no-build -- --exporters json
+      
+      # - name: Upload benchmark results
+      #   uses: actions/upload-artifact@v4
+      #   if: always()
+      #   with:
+      #     name: benchmark-results
+      #     path: TradingPlatform.Benchmarks/BenchmarkDotNet.Artifacts/results/*
+          
+      # - name: Comment benchmark results on PR
+      #   uses: benchmark-action/github-action-benchmark@v1
+      #   if: github.event_name == 'pull_request'
+      #   with:
+      #     tool: 'benchmarkdotnet'
+      #     output-file-path: TradingPlatform.Benchmarks/BenchmarkDotNet.Artifacts/results/BenchmarkRun-001.json
+      #     github-token: ${{ secrets.GITHUB_TOKEN }}
+      #     comment-on-alert: true
+      #     alert-threshold: '150%'
+      #     fail-on-alert: false
