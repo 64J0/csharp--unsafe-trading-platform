@@ -354,7 +354,9 @@ public class Program
         Console.WriteLine("Running benchmarks...");
         Console.WriteLine();
 
-        BenchmarkSwitcher.FromAssembly(typeof(Program).Assembly).Run(args);
+        // Run all benchmarks in the assembly
+        var config = BenchmarkDotNet.Configs.DefaultConfig.Instance;
+        var summary = BenchmarkRunner.Run(typeof(Program).Assembly, config, args);
 
         Console.WriteLine();
         Console.WriteLine("Benchmarks completed. Check the results above.");
